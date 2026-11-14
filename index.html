@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Assistant – Interactive Software Walkthrough</title>
+<style>
+:root{--navy:#102b45;--teal:#168f91;--ink:#263442;--muted:#687887;--line:#e2e8ed;--panel:#f5f8fa}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--ink);background:#fff}
+button,textarea{font:inherit}button{cursor:pointer}
+.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}
+.sidebar{background:#f7f9fb;border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column}
+.brand{font-size:16px;font-weight:bold;padding:10px 9px 22px;color:var(--navy)}
+.newchat{border:1px solid #d8e0e6;background:#fff;border-radius:8px;padding:11px;text-align:left;font-size:13px;margin-bottom:20px;color:var(--ink)}
+.sideheading{font-size:10px;color:#82909c;text-transform:uppercase;letter-spacing:.8px;padding:8px}
+.history{padding:10px;border-radius:7px;font-size:12px;color:#526273;margin:2px 0;text-align:left;border:0;background:transparent;width:100%}
+.history.active,.history:hover{background:#eaf0f4}
+.profile{margin-top:auto;border-top:1px solid var(--line);padding:14px 8px;font-size:12px;color:#526273}
+.main{display:flex;flex-direction:column;min-width:0;min-height:100vh}
+.top{height:58px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.model{font-size:14px;font-weight:bold;color:var(--navy)}.model small{font-weight:normal;color:#7b8995}
+.topright{font-size:11px;color:#82909c}
+.content{width:min(820px,calc(100% - 36px));margin:35px auto 20px;flex:1}
+.welcome{text-align:center;margin:50px 0 28px}.welcome h1{font-size:27px;font-weight:600;margin:0 0 8px;color:var(--navy)}.welcome p{font-size:13px;color:var(--muted);margin:0}
+.promptbox{border:1px solid #d5dee5;border-radius:15px;padding:12px 14px;box-shadow:0 2px 8px #0000000a;background:#fff}
+.promptbox textarea{width:100%;border:0;outline:0;resize:none;min-height:55px;font-size:14px;padding:5px;color:#333}
+.promptbottom{display:flex;justify-content:space-between;align-items:center}.tools{display:flex;gap:8px}.tool{border:0;background:#f0f4f6;border-radius:18px;padding:8px 11px;color:#526273;font-size:11px}
+.send{width:35px;height:35px;border:0;border-radius:50%;background:var(--navy);color:#fff;font-size:18px}
+.suggestions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.suggestion{border:1px solid var(--line);border-radius:9px;padding:13px;text-align:left;background:white;font-size:12px;color:#617181}.suggestion b{display:block;color:var(--navy);margin-bottom:4px}
+.conversation{display:none;margin:20px 0}.message{padding:14px 16px;border-radius:10px;margin:12px 0;font-size:13px;line-height:1.55}.user-message{background:#f1f5f7;margin-left:12%}.assistant-message{background:#fff;border:1px solid #e9eef1;margin-right:8%}
+.disclaimer{text-align:center;color:#9aa5ae;font-size:10px;padding:12px}
+.info-pop{display:none;position:fixed;z-index:50;width:min(300px,calc(100vw - 28px));background:#F2F7FA;border:1px solid #168F91;border-left:4px solid #168F91;border-radius:12px;padding:15px 16px;box-shadow:0 12px 35px #102b4528}
+.info-pop h3{font-size:14px;color:#102B45;margin:0 28px 7px 0}.info-pop p{font-size:12px;line-height:1.5;color:#536477;margin:0}
+.pop-close{position:absolute;right:9px;top:8px;border:0;background:#DCEBED;border-radius:50%;width:25px;height:25px;color:#102B45}
+.hint{position:fixed;right:16px;bottom:16px;background:var(--navy);color:white;border-radius:8px;padding:10px 13px;font-size:11px;box-shadow:0 5px 18px #102b4526}
+.clickable{cursor:pointer}.clickable:focus-visible{outline:2px solid var(--teal);outline-offset:3px}
+.toast{display:none;position:fixed;top:70px;right:18px;background:var(--navy);color:white;padding:11px 14px;border-radius:7px;font-size:12px;z-index:60}\n.prompt-preview{display:none;margin:14px auto 0;max-width:560px;border:1px solid #168F91;background:#F2F7FA;border-left:4px solid #168F91;border-radius:10px;padding:13px 14px;text-align:left}.prompt-preview strong{display:block;font-size:11px;color:var(--teal);margin-bottom:6px}.prompt-preview p{font-size:13px;line-height:1.5;color:#435464;margin:0 0 10px}.use-prompt{border:0;background:var(--navy);color:#fff;border-radius:6px;padding:8px 11px;font-size:11px}
+@media(max-width:700px){.app{grid-template-columns:1fr}.sidebar{display:none}.content{margin-top:20px}.welcome{margin:45px 0 25px}.top{padding:0 14px}}
+@media(max-width:450px){.suggestions{grid-template-columns:1fr}.welcome h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand clickable" tabindex="0" data-title="AI Assistant workspace" data-info="This is the application workspace. The sidebar holds conversation navigation and account details; the main panel is where you work with the assistant.">✳ AI Assistant</div>
+  <button class="newchat clickable" data-title="New chat" data-info="Start a separate conversation. A new chat gives your next task a clean context, while previous conversations can remain in the history list." onclick="resetChat()">＋ &nbsp; New chat</button>
+  <div class="sideheading">Recent conversations</div>
+  <button class="history active clickable" data-title="Recent conversation" data-info="Select a previous conversation to return to that topic. In this sample, the entries are illustrative and do not load saved chat history.">Getting started with AI</button>
+  <button class="history clickable" data-title="Recent conversation" data-info="This is an example of a previous chat title. In a full application, selecting it would reopen that conversation.">Writing a project update</button>
+  <button class="history clickable" data-title="Recent conversation" data-info="Conversation history helps you find earlier work without starting from scratch. These sample entries are for demonstration only.">Summarizing a document</button>
+  <button class="history clickable" data-title="Recent conversation" data-info="Use conversation history to revisit earlier ideas. This demo does not store or retrieve conversations.">Brainstorming ideas</button>
+  <div class="profile clickable" tabindex="0" data-title="User profile" data-info="The profile area represents the signed-in user and workspace settings. A real product may provide account, preferences, and sign-out options here.">◉ &nbsp; Demo User<br><span style="color:#9aa5ae;font-size:10px">Sample workspace</span></div>
+</aside>
+<main class="main">
+  <header class="top">
+    <div class="model clickable" tabindex="0" data-title="Assistant / model selector" data-info="This area identifies the assistant or model in use. In a full product, the menu may let you choose a model or view its capabilities.">AI Assistant <small> ▾</small></div>
+    <div class="topright">Interactive interface demo</div>
+  </header>
+  <section class="content">
+    <div class="welcome" id="welcome"><h1>How can I help you today?</h1><p>Click any highlighted interface element to learn what it does.</p></div>
+    <div class="conversation" id="conversation">
+      <div class="message user-message" id="userMessage"></div>
+      <div class="message assistant-message"><strong>AI Assistant</strong><br><br>This is a sample response. A real assistant would generate a response based on your prompt and the available context.<br><br>A useful project plan might include:<br>1. Define the project outcome<br>2. Break the work into tasks<br>3. Assign owners and dates<br>4. Review progress regularly</div>
+    </div>
+    <div class="promptbox clickable" id="promptbox" tabindex="0" data-title="Message box" data-info="Type your question or instruction here. A prompt works best when it includes the task, relevant context, and the format you want in the response.">
+      <textarea id="prompt" placeholder="Message AI Assistant" aria-label="Message AI Assistant"></textarea>
+      <div class="promptbottom"><div class="tools">
+        <button class="tool clickable" data-title="Attach" data-info="Attach adds supporting material, such as a document or image, so the assistant can use it as context. This demo shows an explanation only; it does not upload files." onclick="showToast('Demo only: file attachment is not enabled.')">＋ Attach</button>
+        <button class="tool clickable" data-title="Tools" data-info="Tools provide additional capabilities for certain tasks. Depending on the product, these might include web search, data analysis, or connected apps. This demo does not run external tools." onclick="showToast('Demo only: tool integrations are not connected.')">⚒ Tools</button>
+      </div><button class="send clickable" aria-label="Send message" data-title="Send message" data-info="Select the send arrow to submit your prompt. The demo displays a prepared sample response and is not connected to a live AI model." onclick="sendMessage()">↑</button></div>
+    </div>
+    <div class="suggestions" id="suggestions">
+      <button class="suggestion clickable" data-title="Plan a project" data-info="A suggested prompt gives you a quick starting point. Select it to preview an example request, then use or edit it in the message box." onclick="showPromptExample('Plan a project','Help me create a project plan for launching a new employee onboarding program. Include key milestones, tasks, owners, and a realistic timeline.')"><b>▦ Plan a project</b>Turn an idea into clear next steps</button>
+      <button class="suggestion clickable" data-title="Summarize information" data-info="Use a summarization prompt when you want the main points from longer information. Add the source material and specify the level of detail you need." onclick="showPromptExample('Summarize information','Summarize the following document into five key points. Highlight important decisions, deadlines, and action items. Use clear, simple language.')"><b>▤ Summarize information</b>Find the key points quickly</button>
+      <button class="suggestion clickable" data-title="Draft content" data-info="Use this starting point to draft or improve content. Include the audience, purpose, and preferred tone for a more useful result." onclick="showPromptExample('Draft content','Write a professional email to the project team explaining a change in the launch timeline. Keep the tone clear, positive, and concise.')"><b>✎ Draft content</b>Create or improve a first draft</button>
+      <button class="suggestion clickable" data-title="Brainstorm ideas" data-info="Brainstorming prompts help generate options. Add constraints or evaluation criteria to make the ideas more relevant." onclick="showPromptExample('Brainstorm ideas','Suggest ten engaging ways to teach employees how to use a new software platform. Include a mix of short videos, job aids, practice activities, and knowledge checks.')"><b>✧ Brainstorm ideas</b>Explore options and possibilities</button>
+    </div>
+    <div class="prompt-preview" id="promptPreview">
+      <strong id="previewTitle">EXAMPLE PROMPT</strong>
+      <p id="previewText"></p>
+      <button class="use-prompt" id="usePromptButton" onclick="useExamplePrompt()">Use this prompt</button>
+    </div>
+  </section>
+  <div class="disclaimer">Fictional interface simulation for portfolio demonstration. No live AI, file upload, or external tools are connected.</div>
+</main>
+</div>
+<div class="info-pop" id="infoPop" role="dialog" aria-live="polite">
+  <button class="pop-close" aria-label="Close explanation" onclick="closeInfo()">×</button>
+  <h3 id="popTitle"></h3><p id="popText"></p>
+</div>
+<div class="hint">Tip: click any interface element to see what it does</div>
+<div class="toast" id="toast"></div>
+<script>
+const pop=document.getElementById('infoPop');
+function showInfo(el){
+  const title=el.dataset.title, info=el.dataset.info;
+  if(!title||!info)return;
+  document.getElementById('popTitle').textContent=title;
+  document.getElementById('popText').textContent=info;
+  pop.style.display='block';
+  const r=el.getBoundingClientRect();
+  const w=Math.min(300,window.innerWidth-28);
+  let left=Math.min(Math.max(14,r.left),window.innerWidth-w-14);
+  let top=r.bottom+10;
+  if(top+130>window.innerHeight) top=Math.max(14,r.top-145);
+  pop.style.left=left+'px';pop.style.top=top+'px';
+}
+function closeInfo(){pop.style.display='none'}
+document.querySelectorAll('[data-title]').forEach(el=>{
+  el.addEventListener('click',e=>{
+    if(e.target.closest('.pop-close'))return;
+    showInfo(el);
+  });
+  if(el.tagName!=='BUTTON' && el.tagName!=='TEXTAREA'){
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();showInfo(el)}});
+  }
+});
+document.addEventListener('click',e=>{if(!e.target.closest('[data-title]')&&!e.target.closest('#infoPop'))closeInfo()});
+let selectedExamplePrompt='';
+function showPromptExample(title,text){
+  selectedExamplePrompt=text;
+  document.getElementById('previewTitle').textContent='EXAMPLE PROMPT · '+title.toUpperCase();
+  document.getElementById('previewText').textContent=text;
+  document.getElementById('promptPreview').style.display='block';
+  document.getElementById('promptPreview').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function useExamplePrompt(){
+  document.getElementById('prompt').value=selectedExamplePrompt;
+  document.getElementById('prompt').focus();
+  document.getElementById('promptPreview').style.display='none';
+  showToast('Prompt added to the message box. Edit it or select Send.');
+}
+function sendMessage(){let text=document.getElementById('prompt').value.trim();if(!text){showToast('Type a message first, or choose a suggested task.');return}document.getElementById('userMessage').textContent=text;document.getElementById('welcome').style.display='none';document.getElementById('suggestions').style.display='none';document.getElementById('conversation').style.display='block';document.getElementById('prompt').value='';showToast('Sample response displayed. No live AI is connected.')}
+function resetChat(){document.getElementById('prompt').value='';document.getElementById('welcome').style.display='block';document.getElementById('suggestions').style.display='grid';document.getElementById('promptPreview').style.display='none';document.getElementById('conversation').style.display='none';showToast('New sample conversation started.')}
+function showToast(text){let t=document.getElementById('toast');t.textContent=text;t.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.style.display='none',2400)}
+document.getElementById('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
+</script>
+</body>
+</html>
