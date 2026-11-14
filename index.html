@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Assistant Interface Walkthrough | Portfolio Demo</title>
+<style>
+:root{--ink:#252525;--muted:#777;--line:#e7e7e7;--green:#16866f}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--ink);background:#fff}
+button,textarea{font:inherit}button{cursor:pointer}
+.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}
+.sidebar{background:#f9f9f9;border-right:1px solid var(--line);padding:14px 12px;display:flex;flex-direction:column}
+.brand{font-size:16px;font-weight:bold;padding:10px 9px 22px;letter-spacing:-.3px}
+.newchat{border:1px solid #ddd;background:#fff;border-radius:8px;padding:11px;text-align:left;font-size:13px;margin-bottom:20px}
+.sideheading{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.8px;padding:8px}
+.history{padding:9px;border-radius:7px;font-size:12px;color:#555;margin:2px 0}
+.history.active,.history:hover{background:#ececec}
+.profile{margin-top:auto;border-top:1px solid var(--line);padding:14px 8px;font-size:12px;color:#555}
+.main{display:flex;flex-direction:column;min-width:0;min-height:100vh}
+.top{height:55px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.model{font-size:14px;font-weight:bold}.model small{font-weight:normal;color:#777}
+.topright{font-size:11px;color:#777}
+.content{width:min(820px,calc(100% - 36px));margin:35px auto 20px;flex:1}
+.welcome{text-align:center;margin:50px 0 28px}.welcome h1{font-size:27px;font-weight:600;margin:0 0 8px}.welcome p{font-size:13px;color:#777;margin:0}
+.promptbox{border:1px solid #d8d8d8;border-radius:15px;padding:12px 14px;box-shadow:0 2px 8px #0000000a;background:#fff}
+.promptbox textarea{width:100%;border:0;outline:0;resize:none;min-height:55px;font-size:14px;padding:5px;color:#333}
+.promptbottom{display:flex;justify-content:space-between;align-items:center}.tools{display:flex;gap:8px}.tool{border:0;background:#f5f5f5;border-radius:18px;padding:7px 10px;color:#555;font-size:11px}
+.send{width:34px;height:34px;border:0;border-radius:50%;background:#222;color:#fff;font-size:18px}
+.suggestions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.suggestion{border:1px solid var(--line);border-radius:9px;padding:12px;text-align:left;background:white;font-size:12px;color:#555}.suggestion b{display:block;color:#333;margin-bottom:4px}
+.conversation{display:none;margin:20px 0}.message{padding:14px 16px;border-radius:10px;margin:12px 0;font-size:13px;line-height:1.55}.user-message{background:#f4f4f4;margin-left:12%}.assistant-message{background:#fff;border:1px solid #eee;margin-right:8%}
+.disclaimer{text-align:center;color:#999;font-size:10px;padding:12px}
+.tour-shade{display:none;position:fixed;inset:0;background:#10101055;z-index:20}
+.tour-card{display:none;position:fixed;z-index:21;right:22px;bottom:22px;width:min(370px,calc(100% - 28px));background:white;border:1px solid #e2e2e2;border-radius:12px;padding:19px;box-shadow:0 12px 45px #0002}
+.tour-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--green);font-weight:bold}
+.tour-card h2{font-size:18px;margin:10px 0 7px}.tour-card p{font-size:13px;color:#666;line-height:1.5;margin:0 0 12px}
+.progress{height:5px;background:#eee;border-radius:8px;overflow:hidden;margin:12px 0}.progress span{display:block;height:100%;background:var(--green);width:20%}
+.tour-actions{display:flex;justify-content:space-between;gap:8px}.tour-actions div{display:flex;gap:7px}
+.tourbtn{border:0;border-radius:6px;padding:9px 12px;font-size:11px;background:#222;color:white}.tourbtn.light{background:#f0f0f0;color:#333}
+.focus{outline:3px solid #16866f!important;outline-offset:4px;position:relative;z-index:22;border-radius:9px}
+.toast{display:none;position:fixed;top:68px;right:18px;background:#222;color:white;padding:11px 14px;border-radius:7px;font-size:12px;z-index:30}
+@media(max-width:700px){.app{grid-template-columns:1fr}.sidebar{display:none}.content{margin-top:20px}.welcome{margin:45px 0 25px}.top{padding:0 14px}}
+@media(max-width:450px){.suggestions{grid-template-columns:1fr}.welcome h1{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand">✳ AI Assistant</div>
+  <button class="newchat" onclick="resetChat()">＋ &nbsp; New chat</button>
+  <div class="sideheading">Recent</div>
+  <div class="history active">Getting started with AI</div>
+  <div class="history">Writing a project update</div>
+  <div class="history">Summarizing a document</div>
+  <div class="history">Brainstorming ideas</div>
+  <div class="profile">◉ &nbsp; Demo User<br><span style="color:#999;font-size:10px">Sample workspace</span></div>
+</aside>
+<main class="main">
+  <header class="top"><div class="model">AI Assistant <small> ▾</small></div><div class="topright">Interface simulation</div></header>
+  <section class="content">
+    <div class="welcome" id="welcome"><h1>How can I help you today?</h1><p>Ask a question, explore an idea, or create something new.</p></div>
+    <div class="conversation" id="conversation">
+      <div class="message user-message" id="userMessage"></div>
+      <div class="message assistant-message"><strong>AI Assistant</strong><br><br>Absolutely. A simple project plan can include the goal, key tasks, owners, milestones, and target dates.<br><br>Here is a useful starting structure:<br>1. Define the project outcome<br>2. Break the work into tasks<br>3. Assign owners and dates<br>4. Review progress regularly</div>
+    </div>
+    <div class="promptbox" id="promptbox">
+      <textarea id="prompt" placeholder="Message AI Assistant" aria-label="Message AI Assistant"></textarea>
+      <div class="promptbottom"><div class="tools"><button class="tool" onclick="showToast('Sample attachment control selected.')">＋ Attach</button><button class="tool" onclick="showToast('Tool selector opened in this demo.')">⚒ Tools</button></div><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
+    </div>
+    <div class="suggestions" id="suggestions">
+      <button class="suggestion" onclick="fillPrompt('Help me plan a project')"><b>▦ Plan a project</b>Turn an idea into clear next steps</button>
+      <button class="suggestion" onclick="fillPrompt('Summarize a document')"><b>▤ Summarize information</b>Find the key points quickly</button>
+      <button class="suggestion" onclick="fillPrompt('Draft a professional email')"><b>✎ Draft content</b>Create or improve a first draft</button>
+      <button class="suggestion" onclick="fillPrompt('Brainstorm training ideas')"><b>✧ Brainstorm ideas</b>Explore options and possibilities</button>
+    </div>
+  </section>
+  <div class="disclaimer">This is a fictional interface simulation for demonstration and learning purposes. It is not connected to a live AI model.</div>
+</main>
+</div>
+<div class="tour-shade" id="shade"></div>
+<div class="tour-card" id="tour">
+  <div class="tour-label" id="tourLabel">Product walkthrough · Step 1 of 5</div>
+  <div class="progress"><span id="progress"></span></div>
+  <h2 id="tourTitle">Welcome to the AI Assistant</h2>
+  <p id="tourText"></p>
+  <div class="tour-actions"><button class="tourbtn light" id="back" onclick="previousStep()">← Back</button><div><button class="tourbtn light" onclick="endTour()">Exit</button><button class="tourbtn" id="next" onclick="nextStep()">Next →</button></div></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const tourSteps=[
+ {target:'.brand',title:'1. Meet the interface',text:'This is the main workspace. The sidebar contains recent conversations, while the center area is where you interact with the assistant.'},
+ {target:'.newchat',title:'2. Start a new conversation',text:'Select New chat when you want to begin a separate conversation. Recent conversations remain listed in the sidebar for quick access.'},
+ {target:'.promptbox',title:'3. Enter a prompt',text:'Type a clear request in the message box. Include the context, desired outcome, and format to help guide the response.'},
+ {target:'.tools',title:'4. Add context or tools',text:'The sample Attach and Tools controls represent ways an assistant interface can accept supporting material or provide additional capabilities. These controls show demo feedback only.'},
+ {target:'.suggestions',title:'5. Try a suggested task',text:'Use a suggested prompt to get started quickly. You can also write your own request and select the send arrow.'}
+];
+let step=0;
+function startTour(){step=0;document.getElementById('shade').style.display='block';document.getElementById('tour').style.display='block';renderStep()}
+function renderStep(){document.querySelectorAll('.focus').forEach(e=>e.classList.remove('focus'));let s=tourSteps[step],target=document.querySelector(s.target);if(target)target.classList.add('focus');document.getElementById('tourLabel').textContent=`Product walkthrough · Step ${step+1} of ${tourSteps.length}`;document.getElementById('tourTitle').textContent=s.title;document.getElementById('tourText').textContent=s.text;document.getElementById('progress').style.width=((step+1)/tourSteps.length*100)+'%';document.getElementById('back').disabled=step===0;document.getElementById('next').textContent=step===tourSteps.length-1?'Finish ✓':'Next →'}
+function nextStep(){if(step<tourSteps.length-1){step++;renderStep()}else endTour()}
+function previousStep(){if(step>0){step--;renderStep()}}
+function endTour(){document.getElementById('shade').style.display='none';document.getElementById('tour').style.display='none';document.querySelectorAll('.focus').forEach(e=>e.classList.remove('focus'))}
+function fillPrompt(text){document.getElementById('prompt').value=text;document.getElementById('prompt').focus()}
+function sendMessage(){let text=document.getElementById('prompt').value.trim();if(!text){showToast('Type a message first, or choose a suggested task.');return}document.getElementById('userMessage').textContent=text;document.getElementById('welcome').style.display='none';document.getElementById('suggestions').style.display='none';document.getElementById('conversation').style.display='block';document.getElementById('prompt').value='';showToast('Sample response displayed. No live AI is connected.')}
+function resetChat(){document.getElementById('prompt').value='';document.getElementById('welcome').style.display='block';document.getElementById('suggestions').style.display='grid';document.getElementById('conversation').style.display='none';showToast('New sample conversation started.')}
+function showToast(text){let t=document.getElementById('toast');t.textContent=text;t.style.display='block';clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.style.display='none',2600)}
+document.getElementById('shade').addEventListener('click',endTour);
+document.getElementById('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
+</script>
+</body>
+</html>
